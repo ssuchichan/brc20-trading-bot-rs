@@ -43,7 +43,5 @@ async fn main() -> Result<()> {
         }
     };
 
-    print!("{:?}", accounts);
-
     Ok(())
 }
