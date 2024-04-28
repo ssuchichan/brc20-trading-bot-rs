@@ -1,5 +1,9 @@
 /target
 .idea
 .vscode
+.env
+
 Cargo.lock
 accounts.txt
+accounts-mint.txt
+accounts-buy.txt

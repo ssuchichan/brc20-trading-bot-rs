@@ -561,7 +561,6 @@ mod tests {
     use dotenv::dotenv;
     use globutils::wallet;
     use sqlx::postgres::PgPoolOptions;
-    use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrPublicKey};
 
     #[test]
     fn test_memo() {
