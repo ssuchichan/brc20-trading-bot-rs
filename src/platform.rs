@@ -23,11 +23,6 @@ use zei::xfr::asset_record::{open_blind_asset_record, AssetRecordType};
 use zei::xfr::sig::XfrPublicKey;
 use zei::xfr::structs::{AssetRecordTemplate, OwnerMemo};
 
-#[no_mangle]
-pub extern "C" fn add(a: u64, b: u64) -> u64 {
-    a + b
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Memo {
     p: String,

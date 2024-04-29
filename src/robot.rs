@@ -1,9 +1,9 @@
 extern crate dotenv;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sqlx::Error;
 use sqlx::PgPool;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Robot {
     pub mnemonic: String,
     pub account: String,
