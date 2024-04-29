@@ -1,4 +1,4 @@
-use crate::utils::FraAccount;
+use crate::types::FraAccount;
 use anyhow::Result;
 use sqlx::PgPool;
 

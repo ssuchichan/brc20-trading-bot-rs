@@ -1,25 +1,23 @@
 mod db;
 mod platform;
 mod robot;
+mod types;
 mod utils;
 
 use crate::db::Storage;
+use crate::types::FraAccount;
 use anyhow::Result;
 use clap::Parser;
 use dotenv::dotenv;
-use env_logger::{Builder, Target};
+use env_logger::Target;
 use log::info;
 use sqlx::pool::PoolOptions;
 use sqlx::{PgPool, Pool, Postgres};
 use std::io::Read;
 use std::sync::Arc;
-use std::time::Duration;
 use std::{env, io};
 use std::{fs::File, io::Write};
-use tokio::time;
-use tokio::time::Sleep;
 use utils::gen_accounts;
-use utils::FraAccount;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -29,6 +27,7 @@ struct Args {
 
 const ACCOUNT_MINT: &'static str = "accounts-mint.txt";
 const ACCOUNT_BUY: &'static str = "accounts-buy.txt";
+#[allow(dead_code)]
 const MINT_LIMIT: usize = 7;
 const ACCOUNT_TYPE_MINT: i32 = 1;
 const ACCOUNT_TYPE_BUY: i32 = 2;
@@ -129,6 +128,8 @@ async fn main() -> Result<()> {
 
     let server = BotServer::new(pool, accounts_mint, accounts_buy);
     server.prepare_accounts().await?;
+
+    info!("Starting server...");
 
     Ok(())
 }
