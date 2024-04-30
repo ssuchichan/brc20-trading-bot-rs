@@ -13,9 +13,9 @@ zei = { git = "https://github.com/FindoraNetwork/zei.git", branch = "stable-main
 
 clap = { version = "4.5.4", features = ["derive"] }
 hex = "0.4.3"
-serde = { version = "1.0.124", features = ["derive"] }
+serde = "1.0.124"
 serde_json = "1.0"
-attohttpc = { version = "0.25", default-features = false, features = ["compress", "json", "tls-rustls"] }
+attohttpc = { version = "0.28.0", default-features = false, features = ["compress", "json", "tls-rustls"] }
 anyhow = "1.0.79"
 dotenv = "0.15.0"
 sha2 = "0.10.8"

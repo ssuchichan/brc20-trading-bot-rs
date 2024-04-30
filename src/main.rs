@@ -27,7 +27,6 @@ struct Args {
 
 const ACCOUNT_MINT: &'static str = "accounts-mint.txt";
 const ACCOUNT_BUY: &'static str = "accounts-buy.txt";
-#[allow(dead_code)]
 const MINT_LIMIT: usize = 7;
 const ACCOUNT_TYPE_MINT: i32 = 1;
 const ACCOUNT_TYPE_BUY: i32 = 2;
