@@ -5,7 +5,7 @@ mod types;
 mod utils;
 
 use crate::db::Storage;
-use crate::types::FraAccount;
+use crate::types::{FraAccount, ListResponse, Rpc};
 use anyhow::Result;
 use clap::Parser;
 use dotenv::dotenv;
@@ -15,8 +15,11 @@ use sqlx::pool::PoolOptions;
 use sqlx::{PgPool, Pool, Postgres};
 use std::io::Read;
 use std::sync::Arc;
+use std::time::Duration;
 use std::{env, io};
 use std::{fs::File, io::Write};
+use tokio::time::interval;
+use tokio::{runtime, time};
 use utils::gen_accounts;
 
 #[derive(Parser, Debug)]
@@ -36,19 +39,22 @@ struct BotServer {
     storage: Arc<Storage>,
     accounts_mint: Vec<FraAccount>,
     accounts_buy: Vec<FraAccount>,
+    rpc_ex: Arc<Rpc>,
 }
 
 impl BotServer {
     pub fn new(
         pool: PgPool,
+        rpc_url: &str,
         accounts_mint: Vec<FraAccount>,
         accounts_buy: Vec<FraAccount>,
-    ) -> Self {
-        Self {
+    ) -> Result<Self> {
+        Ok(Self {
             storage: Arc::new(Storage::new(pool)),
             accounts_mint,
             accounts_buy,
-        }
+            rpc_ex: Arc::new(Rpc::new(rpc_url)?),
+        })
     }
 
     pub async fn prepare_accounts(&self) -> Result<()> {
@@ -62,6 +68,16 @@ impl BotServer {
 
         Ok(())
     }
+
+    pub async fn get_token_list(
+        &self,
+        token: &str,
+        page: i32,
+        page_size: i32,
+    ) -> Result<ListResponse> {
+        let res = self.rpc_ex.get_token_list(token, page, page_size).await?;
+        Ok(res)
+    }
 }
 
 #[tokio::main]
@@ -74,26 +90,24 @@ async fn main() -> Result<()> {
         .connect(&db_url)
         .await
         .expect("connect DB");
-    info!("Connecting DB...ok");
+    println!("Connecting DB...ok");
 
     let args = Args::parse();
     let accounts_mint: Vec<FraAccount> = match File::open(ACCOUNT_MINT) {
         Ok(mut f) => {
-            info!("Reading accounts for mint...");
             let mut contents = String::new();
             f.read_to_string(&mut contents)?;
             let accounts = serde_json::from_str(&contents)?;
-            info!("Reading accounts for mint... ok");
+            println!("Reading accounts-mint... ok");
             accounts
         }
         Err(e) => {
             if e.kind() == io::ErrorKind::NotFound {
-                info!("Generating accounts for mint...");
                 let accounts = gen_accounts(args.accounts)?;
                 let mut f = File::create(ACCOUNT_MINT)?;
                 let s = serde_json::to_string_pretty(&accounts)?;
                 let _ = f.write_all(s.as_bytes())?;
-                info!("Generating accounts for mint... ok");
+                println!("Generating accounts-mint... ok");
                 accounts
             } else {
                 panic!("{}", e);
@@ -103,32 +117,46 @@ async fn main() -> Result<()> {
 
     let accounts_buy: Vec<FraAccount> = match File::open(ACCOUNT_BUY) {
         Ok(mut f) => {
-            info!("Reading accounts for buying...");
             let mut contents = String::new();
             f.read_to_string(&mut contents)?;
             let accounts = serde_json::from_str(&contents)?;
-            info!("Reading accounts for buying... ok");
+            println!("Reading accounts-buy... ok");
             accounts
         }
         Err(e) => {
             if e.kind() == io::ErrorKind::NotFound {
-                info!("Generating accounts for buying...");
                 let accounts = gen_accounts(args.accounts)?;
                 let mut f = File::create(ACCOUNT_BUY)?;
                 let s = serde_json::to_string_pretty(&accounts)?;
                 let _ = f.write_all(s.as_bytes())?;
-                info!("Generating accounts for buying... ok");
+                println!("Generating accounts-buy... ok");
                 accounts
             } else {
                 panic!("{}", e);
             }
         }
     };
-
-    let server = BotServer::new(pool, accounts_mint, accounts_buy);
+    let token = env::var("TOKEN")?;
+    let rpc_ex_url = env::var("EX_RPC")?;
+    let server = BotServer::new(pool, &rpc_ex_url, accounts_mint, accounts_buy)?;
     server.prepare_accounts().await?;
 
-    info!("Starting server...");
+    let mut timer1 = time::interval(time::Duration::from_secs(5));
+    let mut timer2 = time::interval(time::Duration::from_secs(10));
+
+    loop {
+        tokio::select! {
+            _ = timer1.tick() => {
+                let list_res = server.get_token_list(&token, 1, 50).await?;
+                if let Some(lists) = list_res.data {
+                    println!("total lists: {}", lists.len());
+                }
+                println!("No lists");
+            },
+            _ = timer2.tick() => println!("Timer 2 ticked!"),
+            // 可以添加更多的定时器...
+        }
+    }
 
     Ok(())
 }

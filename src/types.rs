@@ -70,7 +70,6 @@ impl Rpc {
             )
             .as_str(),
         ));
-        println!("{}", url.as_str());
 
         let resp = self.client.get(url).send().await?;
         if !resp.status().is_success() {
@@ -95,7 +94,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_token_list() -> Result<()> {
-        let rpc = Rpc::new("https://api-mainnet.brc20.findora.org")?;
+        let rpc = Rpc::new("https://api-testnet.brc20.findora.org")?;
         let token_list = rpc.get_token_list("bonk", 1, 10).await?;
         println!("{:?}", token_list);
         Ok(())

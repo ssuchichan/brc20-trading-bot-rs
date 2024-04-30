@@ -13,19 +13,20 @@ zei = { git = "https://github.com/FindoraNetwork/zei.git", branch = "stable-main
 
 clap = { version = "4.5.4", features = ["derive"] }
 hex = "0.4.3"
-serde = "1.0.124"
-serde_json = "1.0"
+serde = "1.0.199"
+serde_json = "1.0.116"
 attohttpc = { version = "0.28.0", default-features = false, features = ["compress", "json", "tls-rustls"] }
-anyhow = "1.0.79"
+anyhow = "1.0.82"
 dotenv = "0.15.0"
 sha2 = "0.10.8"
 base64 = "0.22.0"
-sqlx = { version = "0.7.3", features = ["bigdecimal", "runtime-tokio", "postgres", "chrono", "json"]}
-tokio = { version = "1", features = ["full"] }
+sqlx = { version = "0.7.4", features = ["bigdecimal", "runtime-tokio", "postgres", "chrono", "json"]}
+tokio = { version = "1.37.0", features = ["full"] }
 rand = "0.8.5"
 env_logger = "0.11.3"
 log = "0.4.21"
 reqwest = { version = "0.12.4", features = ["json"] }
+tokio-timer = "0.2.13"
 
 
 
