@@ -38,7 +38,6 @@ pub struct FraAccount {
 }
 
 impl FraAccount {
-    #[allow(dead_code)]
     pub async fn mint(&self) {
         todo!()
     }
@@ -86,6 +85,8 @@ impl Rpc {
         }
     }
 }
+
+pub async fn get_balance() {}
 
 #[cfg(test)]
 mod tests {
