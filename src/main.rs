@@ -39,15 +39,13 @@ struct BotServer {
     storage: Arc<Storage>,
     accounts_mint: Vec<FraAccount>,
     accounts_buy: Vec<FraAccount>,
-    ex_rpc: Arc<Rpc>,
-    node_rpc: Arc<Rpc>,
+    rpc: Arc<Rpc>,
 }
 
 impl BotServer {
     pub fn new(
         pool: PgPool,
-        ex_rpc_url: &str,
-        node_rpc_url: &str,
+        rpc: Rpc,
         accounts_mint: Vec<FraAccount>,
         accounts_buy: Vec<FraAccount>,
     ) -> Result<Self> {
@@ -55,8 +53,7 @@ impl BotServer {
             storage: Arc::new(Storage::new(pool)),
             accounts_mint,
             accounts_buy,
-            ex_rpc: Arc::new(Rpc::new(ex_rpc_url)?),
-            node_rpc: Arc::new(Rpc::new(node_rpc_url)?),
+            rpc: Arc::new(rpc),
         })
     }
 
@@ -78,7 +75,7 @@ impl BotServer {
         page: i32,
         page_size: i32,
     ) -> Result<ListResponse> {
-        let res = self.ex_rpc.get_token_list(token, page, page_size).await?;
+        let res = self.rpc.get_token_list(token, page, page_size).await?;
         Ok(res)
     }
 
@@ -145,14 +142,9 @@ async fn main() -> Result<()> {
     let ex_rpc_url = env::var("EX_RPC")?;
     let node_rpc_url = env::var("NODE_RPC")?;
     let node_api_port = env::var("NODE_API_PORT")?;
+    let rpc = Rpc::new(&ex_rpc_url, &format!("{}:{}", node_rpc_url, node_api_port))?;
 
-    let server = BotServer::new(
-        pool,
-        &ex_rpc_url,
-        &format!("{}:{}", node_rpc_url, node_api_port),
-        accounts_mint,
-        accounts_buy,
-    )?;
+    let server = BotServer::new(pool, rpc, accounts_mint, accounts_buy)?;
     server.prepare_accounts().await?;
 
     let mut timer1 = time::interval(time::Duration::from_secs(5));
