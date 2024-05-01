@@ -32,10 +32,10 @@ pub fn gen_accounts(amount: i32) -> Result<Vec<FraAccount>> {
 
         accounts.push(FraAccount {
             index: Some(index),
-            mnemonic: Some(mnemonic),
+            mnemonic,
             address,
             public_key: Some(public_key),
-            private_key,
+            private_key: Some(private_key),
         });
     }
 

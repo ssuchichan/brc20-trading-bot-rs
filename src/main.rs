@@ -163,7 +163,6 @@ async fn main() -> Result<()> {
                 let list_res = server.get_token_list(&token, 1, 50).await?;
 
             }
-            // 可以添加更多的定时器...
         }
     }
 
