@@ -39,13 +39,15 @@ struct BotServer {
     storage: Arc<Storage>,
     accounts_mint: Vec<FraAccount>,
     accounts_buy: Vec<FraAccount>,
-    rpc_ex: Arc<Rpc>,
+    ex_rpc: Arc<Rpc>,
+    node_rpc: Arc<Rpc>,
 }
 
 impl BotServer {
     pub fn new(
         pool: PgPool,
-        rpc_url: &str,
+        ex_rpc_url: &str,
+        node_rpc_url: &str,
         accounts_mint: Vec<FraAccount>,
         accounts_buy: Vec<FraAccount>,
     ) -> Result<Self> {
@@ -53,7 +55,8 @@ impl BotServer {
             storage: Arc::new(Storage::new(pool)),
             accounts_mint,
             accounts_buy,
-            rpc_ex: Arc::new(Rpc::new(rpc_url)?),
+            ex_rpc: Arc::new(Rpc::new(ex_rpc_url)?),
+            node_rpc: Arc::new(Rpc::new(node_rpc_url)?),
         })
     }
 
@@ -75,9 +78,11 @@ impl BotServer {
         page: i32,
         page_size: i32,
     ) -> Result<ListResponse> {
-        let res = self.rpc_ex.get_token_list(token, page, page_size).await?;
+        let res = self.ex_rpc.get_token_list(token, page, page_size).await?;
         Ok(res)
     }
+
+    pub async fn get_owned_utxos(&self) {}
 }
 
 #[tokio::main]
@@ -137,8 +142,17 @@ async fn main() -> Result<()> {
         }
     };
     let token = env::var("TOKEN")?;
-    let rpc_ex_url = env::var("EX_RPC")?;
-    let server = BotServer::new(pool, &rpc_ex_url, accounts_mint, accounts_buy)?;
+    let ex_rpc_url = env::var("EX_RPC")?;
+    let node_rpc_url = env::var("NODE_RPC")?;
+    let node_api_port = env::var("NODE_API_PORT")?;
+
+    let server = BotServer::new(
+        pool,
+        &ex_rpc_url,
+        &format!("{}:{}", node_rpc_url, node_api_port),
+        accounts_mint,
+        accounts_buy,
+    )?;
     server.prepare_accounts().await?;
 
     let mut timer1 = time::interval(time::Duration::from_secs(5));
@@ -153,7 +167,10 @@ async fn main() -> Result<()> {
                 }
                 println!("No lists");
             },
-            _ = timer2.tick() => println!("Timer 2 ticked!"),
+            _ = timer2.tick() => {
+                let list_res = server.get_token_list(&token, 1, 50).await?;
+
+            }
             // 可以添加更多的定时器...
         }
     }

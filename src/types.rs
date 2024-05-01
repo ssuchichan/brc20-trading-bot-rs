@@ -1,3 +1,4 @@
+use crate::utils::get_owned_utxos;
 use anyhow::Error;
 use anyhow::Result;
 use reqwest::Client;
@@ -41,6 +42,8 @@ impl FraAccount {
     pub async fn mint(&self) {
         todo!()
     }
+
+    pub async fn transfer(&self, to: &str) {}
 }
 
 #[derive(Debug)]
